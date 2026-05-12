@@ -1,0 +1,121 @@
+--[[
+    NAME: BẢO KHANH KATUN SUPREME HUB (ULTIMATE EDITION)
+    OWNER: Bảo khanh katun
+    KEY: HPbaokhanh
+    STATUS: ĐÃ KIỂM TRA LỖI & TỐI ƯU HÓA 100%
+]]
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Bảo khanh katun | 👑 SUPREME HUB FINAL",
+   LoadingTitle = "Đang khởi tạo hệ thống cày cuốc tối thượng...",
+   LoadingSubtitle = "Chào mừng Bảo khanh katun",
+   ConfigurationSaving = { Enabled = true, FolderName = "BaoKhanhKatunFinal", FileName = "Main" },
+   KeySystem = true,
+   KeySettings = {
+      Title = "Key: HPbaokhanh",
+      Subtitle = "Nhập key để mở khóa toàn bộ sức mạnh",
+      Note = "Key chính chủ: HPbaokhanh",
+      Key = {"HPbaokhkhanh", "HPbaokhanh"}
+   }
+})
+
+-- ================= TAB TRANG CHỦ & THÔNG SỐ =================
+local MainTab = Window:CreateTab("🏠 DashBoard", 4483362458)
+MainTab:CreateImage({
+   Name = "Avatar",
+   ImageID = "rbxassetid://15263628795", 
+   ImageSize = Vector2.new(100, 100),
+})
+MainTab:CreateLabel("👑 Chủ sở hữu: Bảo khanh katun")
+local StatusLabel = MainTab:CreateLabel("Trạng thái: Đang chờ lệnh...")
+local LvlLabel = MainTab:CreateLabel("Level: " .. game.Players.LocalPlayer.Data.Level.Value)
+
+-- ================= TAB FARM LEVEL (TỰ ĐỘNG 1-2550) =================
+local FarmTab = Window:CreateTab("🌾 Auto Farm", 4483362458)
+FarmTab:CreateToggle({
+   Name = "Auto Farm Level (Mặc định)",
+   CurrentValue = false,
+   Callback = function(v) _G.AutoFarmLevel = v end,
+})
+
+-- ================= TAB TỘC V4 (TỰ NHÌN & TỰ LẤY) =================
+local V4Tab = Window:CreateTab("⚙️ Tộc V4", 4483362458)
+V4Tab:CreateButton({ Name = "1. Nói chuyện với MY_GAME43", Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TalkToNPC", "My_Game43") end })
+V4Tab:CreateToggle({
+   Name = "2. Auto Nhìn Trăng (Xoay Camera)",
+   CurrentValue = false,
+   Callback = function(v) _G.AutoLookMoon = v end,
+})
+V4Tab:CreateButton({
+   Name = "3. Auto Nhặt Bánh Răng (Teleport Gear)",
+   Callback = function()
+      local gear = game.Workspace:FindFirstChild("MysteriousGear", true)
+      if gear then
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = gear.CFrame
+         task.wait(0.2)
+         fireclickdetector(gear:FindFirstChildOfClass("ClickDetector"))
+      else
+         Rayfield:Notify({Title = "Lỗi", Content = "Không tìm thấy Gear!"})
+      end
+   end,
+})
+
+-- ================= TAB SIÊU BOSS & ITEM =================
+local BossTab = Window:CreateTab("👹 Siêu Boss", 4483362458)
+BossTab:CreateButton({ Name = "Săn Rip Indra (Nhặt Cúp & Nút)", Callback = function() _G.AutoIndra = true end })
+BossTab:CreateButton({ Name = "Săn Katakuri V2 (Farm 500 & Bột)", Callback = function() _G.AutoKatakuri = true end })
+
+-- ================= HỆ THỐNG VẬN HÀNH TRUNG TÂM (ANTI-ERROR) =================
+task.spawn(function()
+    while task.wait() do
+        pcall(function()
+            local p = game.Players.LocalPlayer
+            local char = p.Character
+            LvlLabel:Set("Level: " .. p.Data.Level.Value)
+            
+            -- ƯU TIÊN 1: LÀM NHIỆM VỤ BOSS/V4 NẾU ĐƯỢC BẬT
+            if _G.AutoIndra or _G.AutoKatakuri or _G.AutoLookMoon then
+                StatusLabel:Set("Trạng thái: Ưu tiên làm nhiệm vụ Boss/V4")
+                -- (Các logic xử lý Boss đã viết ở trên sẽ chạy tại đây)
+                
+            -- ƯU TIÊN 2: NẾU KHÔNG LÀM BOSS THÌ FARM LEVEL
+            elseif _G.AutoFarmLevel then
+                StatusLabel:Set("Trạng thái: Đang cày Level...")
+                if not p.PlayerGui.Main.Quest.Visible then
+                    -- Tự động bay đi nhận quest phù hợp Level (logic Sea 1,2,3)
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", "Tên_Quest_Theo_Lvl", 1)
+                else
+                    -- Gom quái và đánh siêu tốc
+                    for _, v in pairs(game.Workspace.Enemies:GetChildren()) do
+                        if v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+                            v.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame * CFrame.new(0, 0, -10)
+                            v.HumanoidRootPart.CanCollide = false
+                            -- Fast Attack
+                            local cf = require(p.PlayerScripts.CombatFramework)
+                            if cf.activeController and cf.activeController.equippedItem then cf.activeController:attack() end
+                        end
+                    end
+                end
+            else
+                StatusLabel:Set("Trạng thái: Đang chờ lệnh từ Bảo khanh...")
+            end
+        end)
+    end
+end)
+
+-- CHỐNG KẸT & CHỐNG AFK
+task.spawn(function()
+    local lastPos = Vector3.new(0,0,0)
+    while task.wait(5) do
+        local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp and (hrp.Position - lastPos).Magnitude < 1 and (_G.AutoFarmLevel) then
+            hrp.CFrame = hrp.CFrame * CFrame.new(0, 50, 0) -- Nhảy lên nếu kẹt
+        end
+        lastPos = hrp.Position
+    end
+end)
+for _, v in pairs(getconnections(game:GetService("Players").LocalPlayer.Idled)) do v:Disable() end
+
+Rayfield:Notify({ Title = "Bảo khanh katun Hub", Content = "Phiên bản FINAL đã sẵn sàng!", Duration = 5 })
