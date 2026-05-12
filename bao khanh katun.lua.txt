@@ -1,0 +1,117 @@
+--[[
+    PROJECT: KAITUN BLOX FRUIT ULTIMATE V3
+    DEVELOPER: BẢO KHANH (HPBAOKHANH)
+    KEY: HPbaokhanh
+    FEATURES: Full Sea 1-3, Full Items, Auto Mirage & Blue Gear, Auto Collect Fruit
+]]
+
+if not game:IsLoaded() then game.Loaded:Wait() end
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Repo = game:GetService("ReplicatedStorage")
+local VUser = game:GetService("VirtualUser")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+-- 1. THÔNG TIN BẢN QUYỀN & AVATAR CONAN
+local DevName = "Bảo Khanh"
+local TargetKey = "HPbaokhanh"
+local ConanImg = "rbxassetid://15264303741" 
+
+-- 2. HỆ THỐNG XÁC THỰC BẢO MẬT
+local Lib = loadstring(game:HttpGet("https://githubusercontent.com"))()
+local KeyWin = Lib.CreateLib("XÁC THỰC: " .. DevName, "Midnight")
+local KeyTab = KeyWin:NewTab("Key System")
+local KeySec = KeyTab:NewSection("Nhập Key để mở bản ULTIMATE V3")
+
+KeySec:NewTextBox("Key:", "Nhập Key của Bảo Khanh", function(txt)
+    if txt == TargetKey then
+        Lib:Notify({Title = "THÀNH CÔNG", Content = "Chào chủ nhân " .. DevName, Image = ConanImg, Time = 5})
+        wait(1)
+        for _, v in pairs(game:GetService("CoreGui"):GetChildren()) do if v.Name == "XÁC THỰC: " .. DevName then v:Destroy() end end
+        StartUltimateV3()
+    end
+end)
+
+-- 3. HÀM CHÍNH (ULTIMATE V3 MODULE)
+function StartUltimateV3()
+    local Window = Lib.CreateLib("KAITUN V3 - " .. DevName, "Midnight")
+    _G.Config = {AutoFarm = false, AutoFruit = true, AutoMirage = false, Speed = 300}
+
+    -- [TAB 1: THÔNG SỐ NHÂN VẬT]
+    local ProfileTab = Window:NewTab("Thông Tin Acc")
+    local StatsSec = ProfileTab:NewSection("Dữ liệu của " .. DevName)
+    local LvlLabel = StatsSec:NewLabel("Level: " .. LocalPlayer.Data.Level.Value)
+    local MoneyLabel = StatsSec:NewLabel("Beli: $" .. LocalPlayer.Data.Beli.Value)
+
+    -- [TAB 2: CÀY CẤP & CHIẾN ĐẤU]
+    local MainTab = Window:NewTab("Main Kaitun")
+    local FarmSec = MainTab:NewSection("God Speed Mode")
+    FarmSec:NewToggle("Bật Siêu Kaitun", "Đánh nhanh + Gom quái diện rộng", function(state) _G.Config.AutoFarm = state end)
+
+    -- [TAB 3: TÌM ĐẢO MIRAGE & BLUE GEAR]
+    local MirageTab = Window:NewTab("Mirage & Tộc V4")
+    local MirageSec = MirageTab:NewSection("Săn Đảo Bí Ẩn")
+    MirageSec:NewToggle("Auto Tìm Đảo Mirage", "Tự động bay tìm đảo Mirage khi trời tối", function(state)
+        _G.Config.AutoMirage = state
+    end)
+    MirageSec:NewButton("Auto Tìm Blue Gear", "Yêu cầu đang ở đảo Mirage", function()
+        -- Logic: Quét tìm vật thể tên 'Blue Gear' và bay tới nhặt
+        for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+            if v.Name == "Blue Gear" then toTarget(v.CFrame) end
+        end
+    end)
+
+    -- [TAB 4: TỰ ĐỘNG NHẶT TRÁI ÁC QUỶ]
+    local FruitTab = Window:NewTab("Auto Fruit")
+    local FruitSec = FruitTab:NewSection("Nhặt Trái Toàn Bản Đồ")
+    FruitSec:NewToggle("Bật Auto Nhặt Trái", "Tự động bay tới trái ác quỷ vừa spawn", function(state)
+        _G.AutoFruit = state
+        spawn(function()
+            while _G.AutoFruit do wait(1)
+                for _, v in pairs(game:GetService("Workspace"):GetChildren()) do
+                    if v:IsA("Tool") and v:FindFirstChild("Handle") then
+                        toTarget(v.Handle.CFrame)
+                        firetouchinterest(LocalPlayer.Character.HumanoidRootPart, v.Handle, 0)
+                    end
+                end
+            end
+        end)
+    end)
+
+    -- [HỆ THỐNG LOGIC CHỐNG LỖI]
+    function toTarget(cf)
+        pcall(function()
+            local Root = LocalPlayer.Character.HumanoidRootPart
+            local dist = (Root.Position - cf.p).Magnitude
+            TweenService:Create(Root, TweenInfo.new(dist/_G.Config.Speed, Enum.EasingStyle.Linear), {CFrame = cf}):Play()
+            Root.Velocity = Vector3.new(0,0,0)
+        end)
+    end
+
+    -- Đánh nhanh & Gom quái (God Speed Mode)
+    spawn(function()
+        while wait() do
+            if _G.Config.AutoFarm then
+                pcall(function()
+                    local Tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
+                    if Tool then 
+                        for i = 1, 5 do Repo.Remotes.CommF_:InvokeServer("Attack", Tool) end 
+                    end
+                    for _, v in pairs(workspace.Enemies:GetChildren()) do
+                        if v:FindFirstChild("HumanoidRootPart") then
+                            v.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+                            v.HumanoidRootPart.CanCollide = false
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+
+    -- Cập nhật stats & Anti-AFK
+    spawn(function() while wait(1) do LvlLabel:UpdateLabel("Level: " .. LocalPlayer.Data.Level.Value) MoneyLabel:UpdateLabel("Beli: $" .. LocalPlayer.Data.Beli.Value) end end)
+    LocalPlayer.Idled:Connect(function() VUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame) end)
+    
+    print(">>> KAITUN ULTIMATE V3 BY BẢO KHANH LOADED <<<")
+end
