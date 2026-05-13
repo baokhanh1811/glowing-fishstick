@@ -1,0 +1,203 @@
+--// Bao Khanh HUB ULTRA FINAL (No Bug)
+
+local Players = game:GetService("Players")
+local VirtualUser = game:GetService("VirtualUser")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Player = Players.LocalPlayer
+
+-- SETTINGS
+local Settings = {
+    AutoFarm = true,
+    AutoSkill = true,
+    AutoStat = true,
+    Weapon = "Melee",
+    Distance = 5
+}
+
+local Attacking = false
+
+repeat task.wait() until game:IsLoaded()
+
+-- SAFE CHAR
+function GetChar()
+    local char = Player.Character
+    if not char or not char.Parent then
+        char = Player.CharacterAdded:Wait()
+    end
+    return char
+end
+
+function GetHRP()
+    local char = GetChar()
+    return char:WaitForChild("HumanoidRootPart")
+end
+
+function GetHum()
+    return GetChar():WaitForChild("Humanoid")
+end
+
+-- WAIT DATA
+repeat task.wait() until Player:FindFirstChild("Data")
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui", Player.PlayerGui)
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0,420,0,280)
+Main.Position = UDim2.new(0.5,-210,0.5,-140)
+Main.BackgroundColor3 = Color3.fromRGB(20,20,20)
+Main.Active = true
+Main.Draggable = true
+
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1,0,0,30)
+Title.Text = "👑 Bao Khanh ULTRA FINAL"
+Title.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Title.TextColor3 = Color3.new(1,1,1)
+
+local Info = Instance.new("TextLabel", Main)
+Info.Size = UDim2.new(0,200,1,-40)
+Info.Position = UDim2.new(0,10,0,40)
+Info.BackgroundTransparency = 1
+Info.TextColor3 = Color3.new(1,1,1)
+Info.TextXAlignment = Enum.TextXAlignment.Left
+Info.TextYAlignment = Enum.TextYAlignment.Top
+
+-- BUTTON
+local function CreateBtn(text,pos)
+    local b = Instance.new("TextButton", Main)
+    b.Size = UDim2.new(0,180,0,30)
+    b.Position = pos
+    b.Text = text
+    return b
+end
+
+local BtnFarm = CreateBtn("Auto Farm: ON",UDim2.new(0,220,0,40))
+BtnFarm.MouseButton1Click:Connect(function()
+    Settings.AutoFarm = not Settings.AutoFarm
+    BtnFarm.Text = "Auto Farm: "..(Settings.AutoFarm and "ON" or "OFF")
+end)
+
+-- EQUIP SAFE
+function EquipWeapon()
+    local char = GetChar()
+    local hum = GetHum()
+
+    for _,tool in pairs(Player.Backpack:GetChildren()) do
+        if tool:IsA("Tool") and string.find(tool.Name, Settings.Weapon) then
+            hum:EquipTool(tool)
+            return true
+        end
+    end
+
+    for _,tool in pairs(Player.Backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            hum:EquipTool(tool)
+            return true
+        end
+    end
+end
+
+-- ENEMY SAFE
+function GetEnemy()
+    for _,v in pairs(workspace.Enemies:GetChildren()) do
+        if v and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
+            if v.Humanoid.Health > 0 then
+                return v
+            end
+        end
+    end
+end
+
+-- SKILL COOLDOWN
+local lastSkill = 0
+
+function UseSkill()
+    if not Settings.AutoSkill then return end
+    if tick() - lastSkill < 1 then return end
+
+    lastSkill = tick()
+
+    for _,k in pairs({"Z","X","C","V"}) do
+        VirtualUser:SendKeyEvent(true,k,false,game)
+        task.wait(0.1)
+        VirtualUser:SendKeyEvent(false,k,false,game)
+    end
+end
+
+-- STAT SAFE
+function AddStat()
+    if not Settings.AutoStat then return end
+
+    pcall(function()
+        ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint",Settings.Weapon,1)
+    end)
+end
+
+-- ATTACK (LOCK FIX)
+function Attack(enemy)
+    if Attacking then return end
+    Attacking = true
+
+    local start = tick()
+
+    while Settings.AutoFarm do
+        task.wait(0.25)
+
+        if not enemy or not enemy.Parent then break end
+        if not enemy:FindFirstChild("Humanoid") then break end
+        if enemy.Humanoid.Health <= 0 then break end
+
+        if tick() - start > 20 then break end
+
+        local hrp = GetHRP()
+
+        EquipWeapon()
+
+        hrp.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0,0,Settings.Distance)
+
+        VirtualUser:ClickButton1(Vector2.new())
+
+        UseSkill()
+        AddStat()
+    end
+
+    Attacking = false
+end
+
+-- INFO UPDATE
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            Info.Text =
+                "👤 Name: "..Player.Name..
+                "\n⭐ Level: "..Player.Data.Level.Value..
+                "\n💰 Beli: "..Player.Data.Beli.Value..
+                "\n⚔️ Weapon: "..Settings.Weapon..
+                "\n📊 Status: "..(Settings.AutoFarm and "Farming" or "Idle")
+        end)
+    end
+end)
+
+-- MAIN LOOP SAFE
+task.spawn(function()
+    while task.wait(0.5) do
+        if Settings.AutoFarm and not Attacking then
+            local enemy = GetEnemy()
+            if enemy then
+                Attack(enemy)
+            end
+        end
+    end
+end)
+
+-- ANTI AFK
+task.spawn(function()
+    while task.wait(60) do
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end
+end)
+
+print("🔥 Bao Khanh ULTRA FINAL READY 🔥")
